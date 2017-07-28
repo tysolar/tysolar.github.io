@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache"> 
+	<META HTTP-EQUIV="Expires" CONTENT="0"> 
+    <title>TY International Energy Co. Ltd</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/carousel.css" rel="stylesheet">
+    <script src="js/angular.js"></script>
+    <script src="js/utility.js"></script>
+    <style>
+@media (min-width: 200px) {
+  div.item > img{ height: 180px !important ;}
+}
+
+@media (min-width: 300px) {
+  div.item > img{ height: 250px !important; }
+}
+
+@media (min-width: 400px) {
+  div.item > img{ height: 300px !important; }
+}
+@media (min-width: 600px) {
+  div.item > img{ height: 400px !important ;}
+}
+@media, (min-width: 800px) {
+  div.item > img{ height: 500px !important ; }
+}
+    </style>
+  </head>
+  <body ng-app="app" role="document" id="all" style="">
+    <testroot>Loading...</testroot>
+    <script>
+      function spm_gettest(func){
+        $.ajax({
+          url:'https://script.google.com/macros/s/AKfycbxVosOeceVwoa9GZOwEYApS5zCRQVo9s5zjxYJlrV-jjmkZ-tQ/exec',
+          type: 'GET',
+          dataType: "jsonp",
+          crossDomain: true,
+          cache:false,
+          data:{
+            'act':'get',
+            'sheet':'lang'
+          },
+          success: function(data){
+            func(data);
+          }
+        });
+      }
+    </script>
+    <script type='text/ng-template' id='testroot.html'>
+      <testnav></testnav>
+      vm.testdb.langsel: {{vm.testdb.langsel}}
+      <br>
+    </script>
+    <script type='text/ng-template' id='testnav.html'>
+    </script>
+    <script>
+      var apps=angular.module('app', [])
+      .factory('testdb',function(){
+        return {
+          'dbstart':'',
+          'langsel':'EN',
+          'langcode':{},
+          'dbend':''
+        };
+      })
+      .directive('testdirective',function(){
+        return {
+          restrict: 'A',
+          scope: {},
+          bindToController: {
+          },
+          controller: function(){},
+          controllerAs:'ctrl',
+          link:function(scope,element,attr,ctrl){
+          }
+        };
+      })
+      .component('testroot', {
+        templateUrl:'testroot.html',
+        controller:function($scope,$element,testdb){
+          var vm=this; 
+          vm.$onInit=function(){
+            var langsel; 
+            vm.testdb=testdb; 
+            //langsel=localStorage.removeItem('testdb.langsel');
+            langsel=localStorage.getItem('testdb.langsel');
+            if(langsel==null){
+              var country_code = null;
+              $.getJSON('http://ipinfo.io/', function(data){
+                country_code = data.country;
+                switch(country_code){
+                  case 'TW':
+                    langsel='TW'; 
+                  break; 
+                  default:
+                    langsel='EN'; 
+                  break; 
+                }
+                localStorage.setItem('testdb.langsel',langsel);
+                delete langcode; 
+                $.getScript("js/language/"+langsel+".js", function(data, textStatus){
+                  testdb.langcode=langcode; 
+                });
+                $scope.$apply(function(){
+                  testdb.langsel=langsel; 
+                });
+              });
+            }else{
+              testdb.langsel=langsel; 
+              $.getScript("js/language/"+langsel+".js", function(data, textStatus){
+                testdb.langcode=langcode; 
+              });
+            }
+          }
+        },
+        controllerAs:'vm'
+      })
+      .component('testnav', {
+        templateUrl:'testnav.html',
+        controller:function($scope,$element,testdb){
+        },
+        controllerAs:'vm'
+      })
+      ;
+    </script>
+<!--
+	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="#">TY International Energy Co. Ltd</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li><a href="#aboutus">About Us</a></li>
+					<li class="dropdown"><a href="#capabilities" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Capabilities<span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="#powerplant">Power Plant</a></li>
+							<li><a href="#cloud">Cloud</a></li>
+							<li><a href="#iot">IoT</a></li>
+						</ul>
+					</li>
+					<li><a href="#aboutsolar">About Solar</a></li>
+					<li><a href="#investment">Investment</a></li>
+					<li><a href="#contact">Contact Us</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container theme-showcase" style="margin-top:60px">
+		<div class="row">
+		<div class="col-xs-12">
+			<div id="TYslide" class="carousel slide" data-ride="carousel">
+				<ol class="carousel-indicators">
+					<li data-target="#TYslide" data-slide-to="0" class="active"></li>
+					<li data-target="#TYslide" data-slide-to="1" class=""></li>
+					<li data-target="#TYslide" data-slide-to="2" class=""></li>
+				</ol>
+				<div class="carousel-inner" role="listbox">
+					<div class="item active">
+						<img src="img/slide001.jpg" alt="First slide">
+						<div class="container">
+							<div class="carousel-caption">
+								<h1>Provide Green Power Solution</h1>
+								<p>Provide green power solution to create win-win situation.</p>
+							</div>
+						</div>
+					</div>
+					<div class="item">
+						<img src="img/slide002.jpg" alt="Second slide">
+						<div class="container">
+							<div class="carousel-caption" style="color:#169d4d">
+								<h1>Concentrate on Advanced</h1>
+								<p>We will focus on any advanced capabilities, and make us more excellent to help customer. </p>
+							</div>
+						</div>
+					</div>
+					<div class="item">
+						<img src="img/slide003.jpg" alt="Third slide">
+						<div class="container">
+							<div class="carousel-caption">
+								<h1>Imagine Future</h1>
+								<p>Not only devoted to provide green energy solution, we hope we can do more for related industries. </p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<a class="left carousel-control" href="#TYslide" role="button" data-slide="prev"> <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> <span class="sr-only">Previous</span> </a> 
+				<a class="right carousel-control" href="#TYslide" role="button" data-slide="next"> <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> <span class="sr-only">Next</span> </a>
+			</div>
+		</div>
+		</div>
+		<div class="page-header">
+			<h1 id="aboutus">About Us</h1>
+		</div>
+		<div class="page-header">
+			<h1 id="">Capabilities</h1>
+		</div>
+		<div class="page-header">
+			<h3 id="powerplant">Power Plant</h3>
+		</div>
+		<div class="page-header">
+			<h1 id="aboutsolar">About Solar</h1>
+		</div>
+		<div class="well well-lg">
+			<p>
+Solar photovoltaic (PV) modules generate electricity from sunlight, which can be fed into the mains electricity supply of a building or sold to the public electricity grid. Reducing the need for fossil fuel generation, the growing grid-connected solar PV sector across the globe is helping create jobs, enabling families and businesses to save money, and cut greenhouse emissions.
+			</p>
+		</div>
+		<div class="page-header">
+			<h1 id="contact">Contact Us</h1>
+		</div>
+		<table class="table">
+			<thead>
+				<tr>
+					<th><span class="glyphicon glyphicon-info-sign"></span></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><span class="glyphicon glyphicon-home"></span></td>
+					<td>Xianzheng 11th St., Zhubei City, Hsinchu County 302, Taiwan</td>
+				</tr>
+				<tr>
+					<td><span class="glyphicon glyphicon-phone"></span></td>
+					<td>+886-3-558-2TEL</td>
+				</tr>
+				<tr>
+					<td><span class="glyphicon glyphicon-print"></span></td>
+					<td>+886-3-558-2FAX</td>
+				</tr>
+				<tr>
+					<td><span class="glyphicon glyphicon-envelope"></span></td>
+					<td>nrenergy@mail.com</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+-->
+	<script>
+	</script>
+  </body>
+</html>
+

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base target="_top">
+    <script src="js/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <script src="js/jquery-ui.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <script src="js/angular.js"></script>
+    <script src="js/aes.js"></script>
+    <script src="js/jquery.flot.min.js"></script>
+    <script src="js/jquery.flot.symbol.min.js"></script>
+    <script src="js/jquery.flot.time.min.js"></script>
+    <script src="js/jquery.flot.axislabels.js"></script>
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <title>Solar Power - Test</title>
+  </head>
+  <body ng-app='app' class='container'>
+    <pmroot></pmroot>  
+    <script type='text/ng-template' id='pmroot.html'>
+      <h3>Solar Power Monitor Panel</h3>
+      <hr>
+      Power Array: <input ng-model="vm.power" type="text" size="100" ng-keypress="vm.powerEdit($event)"><br>
+      Wind Speed Array: <input ng-model="vm.wind" type="text" size="100"><br>
+      Temperature Array: <input ng-model="vm.temp" type="text" size="100"><br>
+      <div class="row">
+        <img class="col-lg-4 col-xs-12" src="img/pp001.jpg" style="height:300px"></img>
+        <div id="flot-placeholder" class="col-lg-8 col-xs-12" style="height:300px"></div>
+      </div>
+      <div class="row">
+        <div class="col-lg-6 col-xs-12">
+          <i class="fa fa-home" style="font-size:24px"></i> System Power : <font color="blue">19.5</font> (kw)
+        </div>
+        <div class="col-lg-6 col-xs-12">
+          <i class="fa fa-sun-o" style="font-size:24px"></i> Accumulated Total Power : <font color="red">89643</font> (kw)
+        </div>
+        <div class="col-lg-6 col-xs-12">
+          <i class="material-icons">battery_charging_full</i> Current Power : <font color="green">211</font> (kw/hr)
+        </div>
+        <div class="col-lg-6 col-xs-12">
+          <i class="material-icons">power</i> Efficiency : <font color="green"> 98.8 </font> %
+        </div>
+        <div class="col-lg-6 col-xs-12">
+          <i class="fa fa-dollar" style="font-size:24px"></i> Total Income : NTD <font color="blue">103980</font> 
+        </div>
+      </div>
+    </script>
+    <script>
+      function spm_gettest(func){
+        $.ajax({
+          url:'https://script.google.com/macros/s/AKfycbxVosOeceVwoa9GZOwEYApS5zCRQVo9s5zjxYJlrV-jjmkZ-tQ/exec',
+          type: 'GET',
+          dataType: "jsonp",
+          crossDomain: true,
+          cache:false,
+          data:{
+            'act':'get',
+            'sheet':'day'
+          },
+          success: function(data){
+            func(data);
+          }
+        });
+      }
+    </script>
+    <script>
+      var apps=angular.module('app', [])
+      .factory('rootdb',function(){
+        return {
+          'power':[
+            [0.5,0],[1.5,0],[2.5,0],[3.5,0],
+            [4.5,10],[5.5,56],[6.5,113],[7.5,145],
+            [8.5,156],[9.5,177],[10.5,210],[11.5,222],
+            [12.5,233],[13.5,239],[14.5,241],[15.5,225],
+            [16.5,213],[17.5,209],[18.5,137],[19.5,46],
+            [20.5,0],[21.5,0],[22.5,0],[23.5,0]
+          ],
+          'wind':[
+            [0.5,110],[1.5,105],[2.5,93],[3.5,87],
+            [4.5,132],[5.5,156],[6.5,113],[7.5,145],
+            [8.5,146],[9.5,177],[10.5,210],[11.5,222],
+            [12.5,133],[13.5,139],[14.5,141],[15.5,125],
+            [16.5,213],[17.5,209],[18.5,337],[19.5,246],
+            [20.5,206],[21.5,186],[22.5,176],[23.5,133]
+          ],
+          'temp':[
+            [0.5,26],[1.5,25],[2.5,25],[3.5,24],
+            [4.5,25],[5.5,26],[6.5,28],[7.5,29],
+            [8.5,29],[9.5,30],[10.5,31],[11.5,32],
+            [12.5,35],[13.5,38],[14.5,41],[15.5,42],
+            [16.5,37],[17.5,36],[18.5,33],[19.5,30],
+            [20.5,29],[21.5,28],[22.5,27],[23.5,27]
+          ],
+          'pmchart_dataset':[
+            {
+              label: "Accumulated Electricity",
+              data: undefined,         
+              color: "#756600",
+              bars: {
+                show: true, 
+                align: "center",
+                barWidth: 0.5,
+                lineWidth:1
+              }
+            },{
+              label: "Wind Speed",
+              data: undefined,
+              yaxis: 2,
+              color: "#0062FF",
+              points: { symbol: "triangle", fillColor: "#0062FF", show: true },
+              lines: {show:true}
+            },{
+              label: "Temperature",
+              data: undefined,
+              yaxis: 3,
+              color: "#FF0000",
+              points: { symbol: "circle", fillColor: "#FF0000", show: true },
+              lines: { show: true }
+            }
+          ],
+          'pmchart_options':{
+            xaxis: {
+              min:0,
+              max:24,
+              tickSize: 1,        
+              tickFormatter:function(v, axis){
+                return v; 
+              },
+              axisLabel: "(Hour)",
+            },
+            yaxes: [{
+                  position: "left",
+                  min:0,
+                  color: "black",
+                  axisLabel: "Accumulated Electricity (kw)",
+                  axisLabelUseCanvas: true,
+                  axisLabelFontSizePixels: 12,
+                  axisLabelFontFamily: 'Verdana, Arial',
+                  axisLabelPadding: 3            
+              }
+              , {
+                  position: "right",
+                  color: "#0062FF",
+                  axisLabel: "Wind Speed (km/hr)",
+                  axisLabelUseCanvas: true,
+                  axisLabelFontSizePixels: 12,
+                  axisLabelFontFamily: 'Verdana, Arial',
+                  axisLabelPadding: 3            
+              }
+              ,{
+                  position: "right",
+                  color: "black",
+                  axisLabel: "Temperature (°C)",
+                  axisLabelUseCanvas: true,
+                  axisLabelFontSizePixels: 12,
+                  axisLabelFontFamily: 'Verdana, Arial',
+                  axisLabelPadding: 3            
+              }
+            ],
+            legend: {
+              noColumns: 1,
+              labelBoxBorderColor: "#000000",
+              position: "nw"        
+            },
+            grid: {
+              hoverable: true,
+              borderWidth: 3,        
+              backgroundColor: { colors: ["#ffffff", "#EDF5FF"] }
+            }
+          }
+        }
+      })
+      .component('pmroot', {
+        templateUrl:'pmroot.html',
+        controller:function($scope,$element,rootdb){
+          var vm=this; 
+          this.$onInit=function(){
+            vm.power=JSON.stringify(rootdb.power); 
+            vm.wind=JSON.stringify(rootdb.wind); 
+            vm.temp=JSON.stringify(rootdb.temp); 
+            rootdb.pmchart_dataset[0].data=JSON.parse(vm.power);
+            rootdb.pmchart_dataset[1].data=JSON.parse(vm.wind);
+            rootdb.pmchart_dataset[2].data=JSON.parse(vm.temp);
+            spm_gettest(function(d){
+              console.log(d);
+            });
+            vm.loadchart=function(){
+              $.plot($("#flot-placeholder"), rootdb.pmchart_dataset, rootdb.pmchart_options);
+              $("#flot-placeholder").UseTooltip();
+            }
+            vm.powerEdit=function(e){
+              if(e.which==13){
+                rootdb.pmchart_dataset[0].data=JSON.parse(vm.power);
+                vm.loadchart();
+              }
+            }
+            vm.windEdit=function(e){
+              if(e.which==13){
+                rootdb.pmchart_dataset[1].data=JSON.parse(vm.wind);
+                vm.loadchart();
+              }
+            }
+            vm.tempEdit=function(e){
+              if(e.which==13){
+                rootdb.pmchart_dataset[2].data=JSON.parse(vm.temp);
+                vm.loadchart();
+              }
+            }
+            vm.loadchart();
+          }
+        },
+        controllerAs:'vm'
+      });
+    </script>
+    <script>
+      var previousPoint = null, previousLabel = null;
+      $.fn.UseTooltip = function () {
+          $(this).bind("plothover", function (event, pos, item) {
+              if (item) {
+                  if ((previousLabel != item.series.label) || (previousPoint != item.dataIndex)) {
+                      previousPoint = item.dataIndex;
+                      previousLabel = item.series.label;
+                      $("#tooltip").remove();
+                      //console.log(item.datapoint);
+                      var x = item.datapoint[0];
+                      var y = item.datapoint[1];
+      
+                      var color = item.series.color;
+                      var time = ''
+                      time = Math.floor(x) + ':00~' + Math.round(x) + ':00';
+      
+                      //console.log(item);
+                      var unit = "";
+      
+                      if (item.series.label == "Accumulated Electricity") {
+                          unit = "hPa";
+                      } else if (item.series.label == "Wind Speed") {
+                          unit = "km/hr";
+                      } else if (item.series.label == "Temperature") {
+                          unit = "°C";
+                      }
+      
+                      showTooltip(item.pageX, item.pageY, color,
+                                  "<strong>" + item.series.label + "</strong><br>" + time +
+                                  " : <strong>" + y + "</strong> " + unit + "");
+                  }
+              } else {
+                  $("#tooltip").remove();
+                  previousPoint = null;
+              }
+          });
+      };
+      function showTooltip(x, y, color, contents) {
+          $('<div id="tooltip">' + contents + '</div>').css({
+              position: 'absolute',
+              display: 'none',
+              top: y - 40,
+              left: x - 120,
+              border: '2px solid ' + color,
+              padding: '3px',
+              'font-size': '9px',
+              'border-radius': '5px',
+              'background-color': '#fff',
+              'font-family': 'Verdana, Arial, Helvetica, Tahoma, sans-serif',
+              opacity: 0.9
+          }).appendTo("body").fadeIn(200);
+      }
+      
+    </script>
+  </body>
+</html>
